@@ -49,7 +49,7 @@ class usuario(db.Model):
 def index():
     return "HOLA MUNDO"
 
-@app.route("/users/",methods=['GET'])
+@app.route("/users/",methods=['GET','POST'])
 def getUsers():
     arr_users={ 
         "data":[] 
@@ -59,8 +59,8 @@ def getUsers():
         arr_users["data"].append(use.toJSONall() )
     return jsonify(arr_users)
 
-@app.route("/users/add/",methods=['GET'])
-def detalleUser():
+@app.route("/users/add/",methods=['GET','POST'])
+def addUser():
     data = request.json
     try:
         db.session.add(usuario(usu_password=data["password"],usu_nombre="",usu_apellido="",usu_ubi_map_lat= 0 ,usu_ubi_map_long=0, usu_calificacion=0, usu_npersonas= 0 , usu_website ="", usu_telefono="", usu_ruc_dni ="", usu_descripcion="", usu_correo=data["correo"] ))
@@ -69,7 +69,7 @@ def detalleUser():
     except:
         return jsonify({"message":"Error"})
 
-@app.route("/users/edit/",methods=['GET'])
+@app.route("/users/edit/",methods=['GET','POST'])
 def editUser():
     data = request.json
     try:
