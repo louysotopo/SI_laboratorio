@@ -1,9 +1,11 @@
+import logging
 from flask import Flask, jsonify;
 from flask_cors import CORS;
 from logging import fatal
 from flask import Flask, jsonify, sessions,request
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql.elements import Null
 
 
 app = Flask(__name__)
@@ -49,6 +51,25 @@ class usuario(db.Model):
 def index():
     return "HOLA MUNDO"
 
+@app.route("/login/", methods=['GET','POST'])
+def login():
+    data = request.json
+    json_ = {
+        "message":"", 
+        "usuario":{}
+    }
+    try:
+        usuario_ = usuario.query.filter_by(usu_correo=data["correo"],usu_password=data["password"]).first()
+        if usuario_ == None:
+            json_["message"] = "fallo"
+            return jsonify(json_)
+        json_["message"]= "exito"
+        json_["usuario"]= usuario_.toJSONall()
+    except:
+        json_["message"] = "fallo"
+    return jsonify(json_)
+
+
 @app.route("/users/",methods=['GET','POST'])
 def getUsers():
     arr_users={ 
@@ -64,12 +85,13 @@ def addUser():
     data = request.json
     try:
         db.session.add(usuario(usu_password=data["password"],usu_nombre="",usu_apellido="",usu_ubi_map_lat= 0 ,usu_ubi_map_long=0, usu_calificacion=0, usu_npersonas= 0 , usu_website ="", usu_telefono="", usu_ruc_dni ="", usu_descripcion="", usu_correo=data["correo"] ))
-        db.session.commit() 
-        return jsonify({"message":"Registrado correctamente"})
+        db.session.commit()
+        usuario_= usuario.query.filter_by(usu_correo=data["correo"]).first()
+        return jsonify(usuario_.toJSONall())
     except:
         return jsonify({"message":"Error"})
 
-@app.route("/users/edit/",methods=['GET','POST'])
+@app.route("/users/edit/",methods=['GET','POST','PUT'])
 def editUser():
     data = request.json
     try:
@@ -91,5 +113,32 @@ def editUser():
     except:
         return jsonify({"message":"Error al actualizar"})
 
+@app.route("/users/delete/",methods=['GET','POST','DELETE'])
+def deleteUser():
+    data = request.json
+    try:
+        usuario_ = usuario.query.filter_by(usuario_id=data["id"]).first()
+        db.session.delete(usuario_)
+        db.session.commit()
+    except:
+        return jsonify({"message":"Error"})
+    return jsonify({"message":"Borrado Correctamente"})
+    
+
+@app.route("/users/detail/",methods=['GET','POST'])
+def detailUser():
+    data = request.json
+    try:        
+        usuario_ = usuario.query.filter_by(usuario_id=data["id"]).first()
+        if usuario_ == None:
+            return jsonify({"message":"Error al obtener usuario"})
+        return jsonify(usuario_.toJSONall())
+    except:
+        return jsonify({"message":"Error al obtener usuario"})
+
+
+
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
