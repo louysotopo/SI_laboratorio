@@ -1,9 +1,10 @@
 from flask import Flask, jsonify;
 from flask_cors import CORS;
 from logging import fatal
-from flask import Flask, jsonify, sessions
+from flask import Flask, jsonify, sessions,request
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+
 
 app = Flask(__name__)
 CORS(app)
@@ -28,7 +29,8 @@ class usuario(db.Model):
 
     def toJSONall(self):
         usuario_json = {
-            "usuario": self.usu_correo ,
+            "usuario_id": self.usuario_id,
+            "correo": self.usu_correo ,
             "password": self.usu_password ,
             "nombre": self.usu_nombre ,
             "apellido": self.usu_apellido , 
@@ -56,6 +58,38 @@ def getUsers():
     for use in usuarios:
         arr_users["data"].append(use.toJSONall() )
     return jsonify(arr_users)
+
+@app.route("/users/add/",methods=['GET'])
+def detalleUser():
+    data = request.json
+    try:
+        db.session.add(usuario(usu_password=data["password"],usu_nombre="",usu_apellido="",usu_ubi_map_lat= 0 ,usu_ubi_map_long=0, usu_calificacion=0, usu_npersonas= 0 , usu_website ="", usu_telefono="", usu_ruc_dni ="", usu_descripcion="", usu_correo=data["correo"] ))
+        db.session.commit() 
+        return jsonify({"message":"Registrado correctamente"})
+    except:
+        return jsonify({"message":"Error"})
+
+@app.route("/users/edit/",methods=['GET'])
+def editUser():
+    data = request.json
+    try:
+        usuario_= usuario.query.filter_by(usuario_id=data["usuario_id"]).first()
+        usuario_.usu_correo = data["correo"]
+        usuario_.usu_password = data["password"]
+        usuario_.usu_nombre = data["nombre"]
+        usuario_.usu_apellido = data["apellido"]
+        usuario_.usu_ubi_map_lat = data["ubicacion_map_lat"]
+        usuario_.usu_ubi_map_long = data["ubicacion_map_long"]
+        usuario_.usu_calificacion  =  data["calificacion"]
+        usuario_.usu_website = data["website"]
+        usuario_.usu_telefono = data["telefono"]
+        usuario_.usu_ruc_dni = data["DNI_RUC"]
+        usuario_.usu_descripcion = data["descripcion_larga"]
+        usuario_.usu_npersonas = data["npersonas"]
+        db.session.commit()
+        return jsonify({"message":"Actualizado correctamente"})
+    except:
+        return jsonify({"message":"Error al actualizar"})
 
 if __name__ == '__main__':
     app.run(debug=True)
