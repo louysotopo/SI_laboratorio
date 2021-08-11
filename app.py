@@ -27,6 +27,8 @@ class usuario(db.Model):
     usu_ruc_dni = db.Column(db.String,nullable=True)
     usu_descripcion = db.Column(db.String,nullable=True)
     usu_correo = db.Column(db.String,nullable=True)
+    usu_foto = db.Column(db.String,nullable=True)
+    usu_landpage = db.Column(db.String,nullable=True)
 
     def toJSONall(self):
         usuario_json = {
@@ -42,7 +44,9 @@ class usuario(db.Model):
             "telefono": self.usu_telefono,
             "DNI_RUC": self.usu_ruc_dni,
             "descripcion_larga": self.usu_descripcion,
-            "npersonas":self.usu_npersonas,            
+            "npersonas":self.usu_npersonas,
+            "foto": self.usu_foto,
+            "landpage": self.usu_landpage            
         }
         return usuario_json
 
@@ -78,7 +82,7 @@ class producto(db.Model):
             "fecha": self.pro_fecha ,
             "fotos": self.pro_foto ,
             "descuento": self.pro_descuento,
-            "calificacion": self.pro_calidad,
+            "calificacion": self.pro_calificacion,
             "npersonas": self.pro_npersonas,
             "usuario_id": self.usuario_id,
             "unidad": self.pro_unidad
@@ -122,7 +126,7 @@ def getUsers():
 def addUser():
     data = request.json
     try:
-        db.session.add(usuario(usu_password=data["password"],usu_nombre="",usu_apellido="",usu_ubi_map_lat= 0 ,usu_ubi_map_long=0, usu_calificacion=0, usu_npersonas= 0 , usu_website ="", usu_telefono="", usu_ruc_dni ="", usu_descripcion="", usu_correo=data["correo"] ))
+        db.session.add(usuario(usu_password=data["password"],usu_nombre="",usu_apellido="",usu_ubi_map_lat= 0 ,usu_ubi_map_long=0, usu_calificacion=0, usu_npersonas= 0 , usu_website ="", usu_telefono="", usu_ruc_dni ="", usu_descripcion="", usu_correo=data["correo"], usu_foto="", usu_landpage="" ))
         db.session.commit()
         usuario_= usuario.query.filter_by(usu_correo=data["correo"]).first()
         return jsonify(usuario_.toJSONall())
@@ -146,6 +150,8 @@ def editUser():
         usuario_.usu_ruc_dni = data["DNI_RUC"]
         usuario_.usu_descripcion = data["descripcion_larga"]
         usuario_.usu_npersonas = data["npersonas"]
+        usuario_.usu_foto = data["foto"]
+        usuario_.usu_landpage = data["landpage"]
         db.session.commit()
         return jsonify({"message":"Actualizado correctamente"})
     except:
@@ -263,7 +269,6 @@ def userProducts():
     }
     productos = producto.query.filter_by(usuario_id=data["id"])
     usuario_ = usuario.query.filter_by(usuario_id=data["id"]).first()
-
     user_products_["usuario"] = usuario_.toJSONall()
 
     for pro in productos:
